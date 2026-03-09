@@ -66,7 +66,8 @@ services:
         https://github.com/EssentialsX/Essentials/releases/download/2.21.2/EssentialsX-2.21.2.jar,
         https://cdn.modrinth.com/data/fRQREgAc/versions/ImNNT17B/Dynmap-3.7-beta-8-spigot.jar,
         https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot,
-        https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
+        https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot,
+        https://ci.citizensnpcs.co/job/citizens2/lastSuccessfulBuild/artifact/dist/Citizens-2.0.35-SNAPSHOT.jar
 
     volumes:
       - ./data:/data
