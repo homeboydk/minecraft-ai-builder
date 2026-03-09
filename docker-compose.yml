@@ -1,0 +1,110 @@
+services:
+
+  minecraft:
+    image: itzg/minecraft-server
+    container_name: minecraft
+    ports:
+      - "25565:25565"       # Java
+      - "19132:19132/udp"   # Bedrock (Geyser)
+      - "8124:8123"         # Dynmap webkort
+      - "127.0.0.1:25575:25575"  # RCON (kun localhost, tunneles via SSH)
+    environment:
+      EULA: "TRUE"
+      TYPE: "PAPER"
+      VERSION: "1.21.1"
+      MEMORY: "6G"
+
+      # Server settings
+      ONLINE_MODE: "TRUE"
+      MAX_PLAYERS: "10"
+      VIEW_DISTANCE: "10"
+      SIMULATION_DISTANCE: "6"
+      SPAWN_PROTECTION: "0"
+      MAX_TICK_TIME: "-1"
+      DIFFICULTY: "peaceful"
+      GAMEMODE: "creative"
+      LEVEL_TYPE: "flat"
+      GENERATOR_SETTINGS: '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:stone","height":2},{"block":"minecraft:grass_block","height":1}],"biome":"minecraft:plains"}'
+      FORCE_GAMEMODE: "true"
+      MOTD: "§aVelkommen! §r- Rifbjerg MC"
+
+      # RCON
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "NME21o3#"
+      RCON_PORT: "25575"
+      CREATE_CONSOLE_IN_PIPE: "true"
+
+      # Aikar JVM flags - standard optimering for Paper
+      JVM_OPTS: >-
+        -XX:+UseG1GC
+        -XX:+ParallelRefProcEnabled
+        -XX:MaxGCPauseMillis=200
+        -XX:+UnlockExperimentalVMOptions
+        -XX:+DisableExplicitGC
+        -XX:G1NewSizePercent=30
+        -XX:G1MaxNewSizePercent=40
+        -XX:G1HeapRegionSize=8M
+        -XX:G1ReservePercent=20
+        -XX:G1HeapWastePercent=5
+        -XX:G1MixedGCCountTarget=4
+        -XX:InitiatingHeapOccupancyPercent=15
+        -XX:G1MixedGCLiveThresholdPercent=90
+        -XX:G1RSetUpdatingPauseTimePercent=5
+        -XX:SurvivorRatio=32
+        -XX:+PerfDisableSharedMem
+        -XX:MaxTenuringThreshold=1
+
+      # Plugins via Modrinth (virker for Paper 1.21.1)
+      MODRINTH_PROJECTS: >-
+        luckperms,
+        chunky,
+        viaversion,
+        coreprotect
+
+      # EssentialsX + Dynmap + Geyser + Floodgate via direkte URL
+      PLUGINS: >-
+        https://github.com/EssentialsX/Essentials/releases/download/2.21.2/EssentialsX-2.21.2.jar,
+        https://cdn.modrinth.com/data/fRQREgAc/versions/ImNNT17B/Dynmap-3.7-beta-8-spigot.jar,
+        https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot,
+        https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
+
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  # ── Automatisk backup ──────────────────────────────────────────────────────
+  mc-backup:
+    image: itzg/mc-backup
+    container_name: mc-backup
+    environment:
+      BACKUP_INTERVAL: "24h"
+      INITIAL_DELAY: "2m"
+      PRUNE_BACKUPS_DAYS: "14"       # behold 14 dages backups
+      RCON_HOST: minecraft
+      RCON_PORT: "25575"
+      RCON_PASSWORD: "NME21o3#"
+      BACKUP_NAME: "minecraft"
+    volumes:
+      - ./data:/data:ro
+      - ./backups:/backups
+    depends_on:
+      - minecraft
+    restart: unless-stopped
+
+  # ── RCON Web Admin (browser-konsol) ───────────────────────────────────────
+  rcon-web:
+    image: itzg/rcon
+    container_name: mc-rcon-web
+    ports:
+      - "4326:4326"    # Web UI: http://10.1.1.10:4326
+      - "4327:4327"    # WebSocket
+    environment:
+      RWA_USERNAME: "admin"
+      RWA_PASSWORD: "NME21o3#"
+      RWA_ADMIN: "true"
+      RWA_RCON_HOST: minecraft
+      RWA_RCON_PORT: "25575"
+      RWA_RCON_PASSWORD: "NME21o3#"
+    depends_on:
+      - minecraft
+    restart: unless-stopped
